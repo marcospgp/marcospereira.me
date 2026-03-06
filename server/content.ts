@@ -1,12 +1,13 @@
 /**
  * Content loader — reads markdown files from content/ at startup,
- * parses frontmatter, and renders HTML via marked + highlight.js.
+ * parses frontmatter, and renders HTML via marked + highlight.js + KaTeX.
  */
 import fs from "node:fs";
 import path from "node:path";
 import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
+import katex from "katex";
 
 const CONTENT_DIR = path.join(import.meta.dir, "..", "content");
 
@@ -30,6 +31,8 @@ export type Post = {
   pinned: boolean;
   description: string;
   html: string;
+  /** True if post contains LaTeX and needs KaTeX CSS. */
+  hasLatex: boolean;
   /** URL path like /2023/12/15/floating-point/ */
   path: string;
 };
@@ -41,7 +44,66 @@ export type Page = {
   path: string;
 };
 
-function parseFrontmatter(raw: string): { meta: Record<string, string>; body: string } {
+/**
+ * Extract math blocks from markdown source before markdown processing,
+ * replacing them with placeholders. This prevents markdown from converting
+ * LaTeX underscores to <em> tags and braces to other elements.
+ */
+function extractMath(source: string): { text: string; blocks: { tex: string; display: boolean }[] } {
+  const blocks: { tex: string; display: boolean }[] = [];
+  const PLACEHOLDER = "%%MATH_BLOCK_";
+
+  // Display math: $$...$$
+  let text = source.replace(/\$\$([\s\S]*?)\$\$/g, (_, tex: string) => {
+    const idx = blocks.length;
+    blocks.push({ tex: tex.trim(), display: true });
+    return `${PLACEHOLDER}${idx}%%`;
+  });
+
+  // Inline math: $...$
+  text = text.replace(/(?<![\\$])\$([^\n$]+?)\$(?!\$)/g, (_, tex: string) => {
+    const idx = blocks.length;
+    blocks.push({ tex: tex.trim(), display: false });
+    return `${PLACEHOLDER}${idx}%%`;
+  });
+
+  return { text, blocks };
+}
+
+/** Render extracted math blocks back into the HTML after markdown processing. */
+function renderMathBlocks(html: string, blocks: { tex: string; display: boolean }[]): { result: string; found: boolean } {
+  if (blocks.length === 0) return { result: html, found: false };
+
+  const katexOpts = { throwOnError: false, trust: true };
+
+  // Strip \label{...} and resolve \eqref{N} → (N) since cross-block
+  // references don't work when each block is rendered independently.
+  const cleanTex = (tex: string) =>
+    tex.replace(/\\label\{[^}]*\}/g, "").replace(/\\eqref\{([^}]+)\}/g, "(\\text{$1})");
+
+  let result = html.replace(/%%MATH_BLOCK_(\d+)%%/g, (_, idxStr: string) => {
+    const idx = Number(idxStr);
+    const block = blocks[idx];
+    try {
+      return katex.renderToString(cleanTex(block.tex), { ...katexOpts, displayMode: block.display });
+    } catch {
+      return `<code>${block.tex}</code>`;
+    }
+  });
+
+  // \eqref cross-references can't resolve across independently-rendered blocks.
+  // Replace any unrendered \eqref{N} with a styled (N) reference.
+  result = result.replace(/\\eqref\{([^}]+)\}/g, (_, ref: string) => {
+    return `<span class="katex"><span class="katex-html"><span class="base"><span class="mord">(${ref})</span></span></span></span>`;
+  });
+
+  return { result, found: true };
+}
+
+function parseFrontmatter(raw: string): {
+  meta: Record<string, string>;
+  body: string;
+} {
   const match = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
   if (!match) return { meta: {}, body: raw };
 
@@ -51,8 +113,10 @@ function parseFrontmatter(raw: string): { meta: Record<string, string>; body: st
     if (colonIdx === -1) continue;
     const key = line.slice(0, colonIdx).trim();
     let value = line.slice(colonIdx + 1).trim();
-    // Strip surrounding quotes
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
       value = value.slice(1, -1);
     }
     meta[key] = value;
@@ -62,36 +126,40 @@ function parseFrontmatter(raw: string): { meta: Record<string, string>; body: st
 
 function loadPosts(): Post[] {
   const postsDir = path.join(CONTENT_DIR, "posts");
-  const files = fs.readdirSync(postsDir).filter((f) => f.endsWith(".md")).sort().reverse();
+  const files = fs
+    .readdirSync(postsDir)
+    .filter((f) => f.endsWith(".md"))
+    .sort()
+    .reverse();
 
   const posts: Post[] = [];
   for (const file of files) {
     const raw = fs.readFileSync(path.join(postsDir, file), "utf-8");
     const { meta, body } = parseFrontmatter(raw);
 
-    // Skip unpublished posts
     if (meta.published === "false") continue;
 
-    // Parse date and slug from filename: 2023-12-15-floating-point.md
     const dateMatch = file.match(/^(\d{4})-(\d{2})-(\d{2})-(.+)\.md$/);
     if (!dateMatch) continue;
 
     const [, year, month, day, slugPart] = dateMatch;
-    const slug = slugPart;
     const date = `${year}-${month}-${day}`;
-    const postPath = `/${year}/${month}/${day}/${slug}/`;
+    const postPath = `/${year}/${month}/${day}/${slugPart}/`;
 
-    // Fix asset paths: /assets/... -> /content/assets/...
     const fixedBody = body.replace(/\(\/assets\//g, "(/content/assets/");
+    const { text: safeBody, blocks: mathBlocks } = extractMath(fixedBody);
+    const rawHtml = marked.parse(safeBody) as string;
+    const { result: html, found: hasLatex } = renderMathBlocks(rawHtml, mathBlocks);
 
     posts.push({
-      slug,
-      title: meta.title ?? slug,
+      slug: slugPart,
+      title: meta.title ?? slugPart,
       date,
       tag: meta.tag ?? "",
       pinned: meta.pinned === "true",
       description: meta.description ?? "",
-      html: marked.parse(fixedBody) as string,
+      html,
+      hasLatex,
       path: postPath,
     });
   }
@@ -139,7 +207,7 @@ export const postByPath = new Map(posts.map((p) => [p.path, p]));
 /** Page lookup by slug. */
 export const pageBySlug = new Map(pages.map((p) => [p.slug, p]));
 
-/** Unique tags with counts. */
+/** Unique tags with counts, sorted by frequency. */
 export const tags = (() => {
   const counts = new Map<string, number>();
   for (const post of posts) {

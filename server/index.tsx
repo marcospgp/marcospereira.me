@@ -1,226 +1,337 @@
-/** Personal website — Hono JSX SSR with hono/css scoped styles. */
+/** Personal website — Hono JSX SSR with Inter + JetBrains Mono + KaTeX. */
 import { Hono } from "hono";
 import { serveStatic } from "hono/bun";
 import { Style, css } from "hono/css";
-import { posts, postByPath, pages, pageBySlug, tags } from "./content.ts";
+import { posts, postByPath, pages, tags } from "./content.ts";
 
 const app = new Hono();
-
 const PORT = Number(process.env.PORT ?? 3000);
 
-// -- Styles --
+// -- Global styles --
 
 const globalCss = `
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { line-height: 1.5; -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+html { -webkit-text-size-adjust: 100%; }
 body {
-  font-family: Georgia, 'Times New Roman', serif;
-  background: #fafaf9;
-  color: #1c1917;
-  min-height: 100vh;
-  font-size: 17px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: #fff;
+  color: #171717;
+  font-size: 16px;
   line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
 }
-a { color: #1c1917; }
-a:hover { color: #78716c; }
-img { max-width: 100%; height: auto; display: block; border-radius: 4px; margin: 1.5rem 0; }
-pre { background: #292524; color: #e7e5e4; padding: 1.25rem; border-radius: 6px; overflow-x: auto; font-size: 0.875rem; line-height: 1.5; margin: 1.5rem 0; }
-code { font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 0.9em; }
-:not(pre) > code { background: #f5f5f4; padding: 0.15em 0.4em; border-radius: 3px; color: #44403c; }
-blockquote { border-left: 3px solid #d6d3d1; padding-left: 1rem; color: #78716c; margin: 1.5rem 0; }
-h1, h2, h3, h4, h5, h6 { line-height: 1.3; margin-top: 2rem; margin-bottom: 0.75rem; }
-h1 { font-size: 2rem; }
-h2 { font-size: 1.5rem; }
-h3 { font-size: 1.25rem; }
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; height: auto; display: block; border-radius: 6px; margin: 1.5rem 0; }
+pre {
+  background: #18181b;
+  color: #e4e4e7;
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 1.5rem 0;
+}
+code {
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  font-size: 0.875em;
+}
+:not(pre) > code {
+  background: #f4f4f5;
+  padding: 0.125em 0.375em;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+blockquote {
+  border-left: 2px solid #e4e4e7;
+  padding-left: 1.25rem;
+  color: #71717a;
+  margin: 1.5rem 0;
+}
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+h1 { font-size: 1.75rem; margin-top: 2.5rem; margin-bottom: 0.75rem; }
+h2 { font-size: 1.25rem; margin-top: 2rem; margin-bottom: 0.5rem; }
+h3 { font-size: 1.125rem; margin-top: 1.75rem; margin-bottom: 0.5rem; }
 p { margin-bottom: 1rem; }
 ul, ol { margin-bottom: 1rem; padding-left: 1.5rem; }
 li { margin-bottom: 0.25rem; }
-hr { border: none; border-top: 1px solid #e7e5e4; margin: 2rem 0; }
-table { border-collapse: collapse; margin: 1.5rem 0; width: 100%; }
-th, td { border: 1px solid #d6d3d1; padding: 0.5rem 0.75rem; text-align: left; }
-th { background: #f5f5f4; font-weight: 600; }
+hr { border: none; border-top: 1px solid #e4e4e7; margin: 2.5rem 0; }
+table { border-collapse: collapse; margin: 1.5rem 0; width: 100%; font-size: 15px; }
+th, td { border: 1px solid #e4e4e7; padding: 0.5rem 0.75rem; text-align: left; }
+th { background: #fafafa; font-weight: 600; }
+
+.katex-display { margin: 1.5rem 0; overflow-x: auto; }
+
+@media (max-width: 640px) {
+  body { font-size: 15px; }
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.125rem; }
+  pre { font-size: 12px; padding: 0.875rem 1rem; }
+}
 `;
+
+// -- Scoped styles --
 
 const container = css`
-  max-width: 680px;
+  max-width: 640px;
   margin: 0 auto;
-  padding: 3rem 1.5rem;
+  padding: 3.5rem 1.5rem 2.5rem;
+  @media (max-width: 640px) {
+    padding: 2rem 1.25rem 2rem;
+  }
 `;
 
-const header = css`
+const headerStyle = css`
   margin-bottom: 3rem;
+  @media (max-width: 640px) {
+    margin-bottom: 2rem;
+  }
 `;
 
-const siteName = css`
-  font-size: 1.75rem;
-  font-weight: 400;
-  letter-spacing: 0.02em;
-  margin-bottom: 0.5rem;
-  & a { text-decoration: none; }
+const siteNameStyle = css`
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 `;
 
-const nav = css`
+const navStyle = css`
   display: flex;
+  flex-wrap: wrap;
   gap: 1.25rem;
-  font-size: 0.95rem;
-  color: #78716c;
-  & a { color: #78716c; text-decoration: none; }
-  & a:hover { color: #1c1917; }
-`;
-
-const socialLinks = css`
-  display: flex;
-  gap: 1rem;
-  margin-top: 0.5rem;
-  margin-bottom: 1rem;
+  margin-top: 0.75rem;
   font-size: 0.875rem;
-  & a { color: #a8a29e; text-decoration: none; }
-  & a:hover { color: #1c1917; }
+  @media (max-width: 640px) {
+    gap: 1rem;
+    font-size: 0.8125rem;
+  }
 `;
 
-const postList = css`
+const navLink = css`
+  color: #a1a1aa;
+  transition: color 0.15s;
+  &:hover { color: #171717; }
+`;
+
+const navLinkActive = css`
+  color: #171717;
+`;
+
+const tagFilterStyle = css`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-bottom: 2rem;
+`;
+
+const tagPill = css`
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  border: 1px solid #e4e4e7;
+  color: #71717a;
+  transition: all 0.15s;
+  &:hover { color: #171717; border-color: #a1a1aa; }
+`;
+
+const tagPillActive = css`
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  background: #18181b;
+  color: #fff;
+  border: 1px solid #18181b;
+`;
+
+const postListStyle = css`
   list-style: none;
   padding: 0;
 `;
 
-const postItem = css`
-  margin-bottom: 1.5rem;
+const postItemStyle = css`
+  margin-bottom: 1.125rem;
 `;
 
-const postTitle = css`
-  font-size: 1.1rem;
-  font-weight: 400;
-  & a { text-decoration: none; border-bottom: 1px solid #d6d3d1; }
-  & a:hover { border-color: #1c1917; color: #1c1917; }
-`;
-
-const postMeta = css`
-  font-size: 0.85rem;
-  color: #a8a29e;
-  margin-top: 0.15rem;
-`;
-
-const articleBody = css`
-  margin-top: 2rem;
-`;
-
-const articleHeader = css`
-  margin-bottom: 0;
-  & h1 { margin-top: 0; margin-bottom: 0.5rem; }
-`;
-
-const sectionLabel = css`
-  font-size: 0.8rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: #a8a29e;
+const postTitleStyle = css`
+  font-size: 0.9375rem;
   font-weight: 500;
-  margin-bottom: 1.25rem;
+  line-height: 1.4;
+  & a:hover {
+    text-decoration: underline;
+    text-decoration-color: #a1a1aa;
+    text-underline-offset: 3px;
+  }
 `;
 
-const tagFilter = css`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 2rem;
-  font-size: 0.875rem;
-  & a { color: #78716c; text-decoration: none; }
-  & a:hover { color: #1c1917; }
+const postMetaStyle = css`
+  font-size: 0.8125rem;
+  color: #a1a1aa;
+  margin-top: 0.0625rem;
 `;
 
-const pinnedBadge = css`
-  color: #a8a29e;
-  font-size: 0.8rem;
+const articleHeaderStyle = css`
+  & h1 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.025em;
+  }
 `;
 
-const footer = css`
+const articleBodyStyle = css`
+  margin-top: 2rem;
+  & a {
+    text-decoration: underline;
+    text-decoration-color: #d4d4d8;
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.15s;
+  }
+  & a:hover { text-decoration-color: #171717; }
+`;
+
+const proseLinks = css`
+  & a {
+    text-decoration: underline;
+    text-decoration-color: #d4d4d8;
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.15s;
+  }
+  & a:hover { text-decoration-color: #171717; }
+`;
+
+const footerStyle = css`
   margin-top: 4rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #e7e5e4;
-  font-size: 0.85rem;
-  color: #a8a29e;
+  padding-top: 1.25rem;
+  border-top: 1px solid #e4e4e7;
+  font-size: 0.8125rem;
+  color: #a1a1aa;
+  display: flex;
+  gap: 1rem;
+  & a { color: #a1a1aa; transition: color 0.15s; }
+  & a:hover { color: #171717; }
 `;
+
+// -- Helpers --
+
+const NAV_ITEMS = [
+  { href: "/", label: "Posts" },
+  { href: "/about-me", label: "About" },
+  { href: "/notes", label: "Notes" },
+  { href: "/concepts", label: "Concepts" },
+];
+
+function formatDateShort(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString("en-US", { year: "numeric", month: "short" });
+}
+
+function formatDateFull(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+}
 
 // -- Layout --
 
-function Layout({ title, description, children }: { title: string; description?: string; children: unknown }) {
+function Layout({
+  title,
+  description,
+  path,
+  katexCss,
+  children,
+}: {
+  title: string;
+  description?: string;
+  path?: string;
+  katexCss?: boolean;
+  children: unknown;
+}) {
   return (
     <html lang="en">
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#ffffff" />
         <title>{title}</title>
         {description && <meta name="description" content={description} />}
+        <link rel="icon" href="/content/assets/favicon/favicon.ico" sizes="any" />
+        <link rel="icon" href="/content/assets/favicon/favicon-32x32.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/content/assets/favicon/apple-touch-icon.png" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400..600&family=JetBrains+Mono&display=swap"
+          rel="stylesheet"
+        />
+        {katexCss && (
+          <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/katex.min.css"
+            crossorigin=""
+          />
+        )}
         <style dangerouslySetInnerHTML={{ __html: globalCss }} />
         <Style />
       </head>
       <body>
         <div class={container}>
-          <div class={header}>
-            <div class={siteName}>
+          <header class={headerStyle}>
+            <div class={siteNameStyle}>
               <a href="/">Marcos Pereira</a>
             </div>
-            <div class={socialLinks}>
-              <a href="https://x.com/marcospereeira">X</a>
-              <a href="https://github.com/marcospgp">GitHub</a>
-            </div>
-            <div class={nav}>
-              <a href="/">Posts</a>
-              <a href="/about-me">About</a>
-              <a href="/notes">Notes</a>
-              <a href="/concepts">Concepts</a>
-            </div>
-          </div>
-          {children}
-          <div class={footer}>
-            Marcos Pereira
-          </div>
+            <nav class={navStyle}>
+              {NAV_ITEMS.map((item) => (
+                <a href={item.href} class={path === item.href ? navLinkActive : navLink}>
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+          </header>
+          <main>{children}</main>
+          <footer class={footerStyle}>
+            <a href="https://x.com/marcospereeira">X</a>
+            <a href="https://github.com/marcospgp">GitHub</a>
+          </footer>
         </div>
       </body>
     </html>
   );
 }
 
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
-}
-
 // -- Routes --
 
-// Static assets (images from content/assets/)
+app.use("/favicon.ico", serveStatic({ path: "./content/assets/favicon/favicon.ico" }));
 app.use("/content/assets/*", serveStatic({ root: "./" }));
 
-// Health check
 app.get("/health", (c) => c.text("ok"));
-
-// robots.txt
 app.get("/robots.txt", (c) => c.text("User-agent: *\nAllow: /\n"));
 
-// Home — post list with optional tag filter
+// Home
 app.get("/", (c) => {
   const tag = c.req.query("tag");
   const filtered = tag ? posts.filter((p) => p.tag === tag) : posts;
 
   return c.html(
-    <Layout title="Marcos Pereira" description="Developer from Portugal. Writing about web, AI, and game dev.">
-      <h2 class={sectionLabel}>Posts</h2>
-      <div class={tagFilter}>
-        <a href="/" style={!tag ? "color: #1c1917; font-weight: 600" : ""}>All</a>
+    <Layout title="Marcos Pereira" description="Developer from Portugal. Writing about web, AI, and game dev." path="/">
+      <div class={tagFilterStyle}>
+        <a href="/" class={!tag ? tagPillActive : tagPill}>
+          All
+        </a>
         {tags.map(([t]) => (
-          <a href={`/?tag=${encodeURIComponent(t)}`} style={tag === t ? "color: #1c1917; font-weight: 600" : ""}>{t}</a>
+          <a href={`/?tag=${encodeURIComponent(t)}`} class={tag === t ? tagPillActive : tagPill}>
+            {t}
+          </a>
         ))}
       </div>
-      <ul class={postList}>
+      <ul class={postListStyle}>
         {filtered.map((post) => (
-          <li class={postItem}>
-            <div class={postTitle}>
+          <li class={postItemStyle}>
+            <div class={postTitleStyle}>
               <a href={post.path}>{post.title}</a>
             </div>
-            <div class={postMeta}>
-              {formatDate(post.date)} · {post.tag}
-              {post.pinned && <span class={pinnedBadge}> · Pinned</span>}
+            <div class={postMetaStyle}>
+              {formatDateShort(post.date)} · {post.tag}
             </div>
           </li>
         ))}
@@ -229,7 +340,7 @@ app.get("/", (c) => {
   );
 });
 
-// Individual post — /:year/:month/:day/:slug/
+// Individual post
 app.get("/:year/:month/:day/:slug/", (c) => {
   const { year, month, day, slug } = c.req.param();
   const postPath = `/${year}/${month}/${day}/${slug}/`;
@@ -238,24 +349,31 @@ app.get("/:year/:month/:day/:slug/", (c) => {
   if (!post) return c.notFound();
 
   return c.html(
-    <Layout title={`${post.title} — Marcos Pereira`} description={post.description}>
+    <Layout
+      title={`${post.title} | Marcos Pereira`}
+      description={post.description}
+      path={postPath}
+      katexCss={post.hasLatex}
+    >
       <article>
-        <div class={articleHeader}>
+        <div class={articleHeaderStyle}>
           <h1>{post.title}</h1>
-          <div class={postMeta}>{formatDate(post.date)} · {post.tag}</div>
+          <div class={postMetaStyle}>
+            {formatDateFull(post.date)} · {post.tag}
+          </div>
         </div>
-        <div class={articleBody} dangerouslySetInnerHTML={{ __html: post.html }} />
+        <div class={articleBodyStyle} dangerouslySetInnerHTML={{ __html: post.html }} />
       </article>
     </Layout>,
   );
 });
 
-// Static pages (about-me, notes, concepts, resume)
+// Static pages (resume still accessible via direct URL but not in nav)
 for (const page of pages) {
   app.get(page.path, (c) =>
     c.html(
-      <Layout title={`${page.title} — Marcos Pereira`}>
-        <div dangerouslySetInnerHTML={{ __html: page.html }} />
+      <Layout title={`${page.title} | Marcos Pereira`} path={page.path}>
+        <div class={proseLinks} dangerouslySetInnerHTML={{ __html: page.html }} />
       </Layout>,
     ),
   );
@@ -264,17 +382,19 @@ for (const page of pages) {
 // 404
 app.notFound((c) =>
   c.html(
-    <Layout title="Not Found — Marcos Pereira">
+    <Layout title="Not Found | Marcos Pereira">
       <h1>Page not found</h1>
       <p>
-        <a href="/">Go home</a>
+        <a href="/" style="text-decoration: underline; text-underline-offset: 3px">
+          Go home
+        </a>
       </p>
     </Layout>,
     404,
   ),
 );
 
-console.log(`marcospereira.me server listening on port ${PORT}`);
+console.log(`marcospereira.me listening on port ${PORT}`);
 
 export default {
   port: PORT,
