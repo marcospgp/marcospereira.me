@@ -1,8 +1,8 @@
-/** Personal website — Hono JSX SSR with Inter + JetBrains Mono + KaTeX. */
+/** Personal website — Hono JSX SSR with Newsreader + JetBrains Mono + KaTeX. */
 import { Hono } from "hono";
 import { serveStatic } from "hono/bun";
 import { Style, css } from "hono/css";
-import { posts, postByPath, pages, tags } from "./content.ts";
+import { posts, postsByDate, postByPath, pages } from "./content.ts";
 
 const app = new Hono();
 const PORT = Number(process.env.PORT ?? 3000);
@@ -13,218 +13,227 @@ const globalCss = `
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { -webkit-text-size-adjust: 100%; }
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  background: #fff;
-  color: #171717;
-  font-size: 16px;
-  line-height: 1.7;
+  font-family: 'Newsreader', Georgia, 'Times New Roman', serif;
+  background: #faf9f7;
+  color: #1a1a1a;
+  font-size: 17px;
+  line-height: 1.75;
   -webkit-font-smoothing: antialiased;
 }
 a { color: inherit; text-decoration: none; }
-img { max-width: 100%; height: auto; display: block; border-radius: 6px; margin: 1.5rem 0; }
+img { max-width: 100%; height: auto; display: block; border-radius: 4px; margin: 1.5rem 0; }
 pre {
-  background: #18181b;
-  color: #e4e4e7;
-  padding: 1rem 1.25rem;
-  border-radius: 8px;
+  background: #1a1a1a;
+  color: #e8e8e8;
+  padding: 1.25rem;
+  border-radius: 6px;
   overflow-x: auto;
   font-size: 13px;
-  line-height: 1.7;
+  line-height: 1.6;
   margin: 1.5rem 0;
 }
 code {
   font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
-  font-size: 0.875em;
-}
-:not(pre) > code {
-  background: #f4f4f5;
-  padding: 0.125em 0.375em;
-  border-radius: 4px;
   font-size: 0.85em;
 }
+:not(pre) > code {
+  background: #eeedeb;
+  padding: 0.125em 0.375em;
+  border-radius: 3px;
+}
 blockquote {
-  border-left: 2px solid #e4e4e7;
+  border-left: 2px solid #d0cfcd;
   padding-left: 1.25rem;
-  color: #71717a;
+  color: #666;
   margin: 1.5rem 0;
+  font-style: italic;
 }
 h1, h2, h3, h4, h5, h6 {
-  line-height: 1.3;
-  letter-spacing: -0.02em;
-  font-weight: 600;
+  font-weight: 500;
+  line-height: 1.35;
 }
-h1 { font-size: 1.75rem; margin-top: 2.5rem; margin-bottom: 0.75rem; }
-h2 { font-size: 1.25rem; margin-top: 2rem; margin-bottom: 0.5rem; }
-h3 { font-size: 1.125rem; margin-top: 1.75rem; margin-bottom: 0.5rem; }
+h1 { font-size: 1.5rem; margin-top: 2.5rem; margin-bottom: 0.75rem; }
+h2 { font-size: 1.2rem; margin-top: 2rem; margin-bottom: 0.5rem; }
+h3 { font-size: 1.1rem; margin-top: 1.75rem; margin-bottom: 0.5rem; }
 p { margin-bottom: 1rem; }
 ul, ol { margin-bottom: 1rem; padding-left: 1.5rem; }
 li { margin-bottom: 0.25rem; }
-hr { border: none; border-top: 1px solid #e4e4e7; margin: 2.5rem 0; }
-table { border-collapse: collapse; margin: 1.5rem 0; width: 100%; font-size: 15px; }
-th, td { border: 1px solid #e4e4e7; padding: 0.5rem 0.75rem; text-align: left; }
-th { background: #fafafa; font-weight: 600; }
-
+hr { border: none; border-top: 1px solid #e0dfdd; margin: 2.5rem 0; }
+table { border-collapse: collapse; margin: 1.5rem 0; width: 100%; }
+th, td { border: 1px solid #e0dfdd; padding: 0.5rem 0.75rem; text-align: left; }
+th { background: #f5f4f2; font-weight: 500; }
 .katex-display { margin: 1.5rem 0; overflow-x: auto; }
-
 @media (max-width: 640px) {
-  body { font-size: 15px; }
-  h1 { font-size: 1.5rem; }
-  h2 { font-size: 1.125rem; }
-  pre { font-size: 12px; padding: 0.875rem 1rem; }
+  body { font-size: 16px; }
+  pre { font-size: 12px; padding: 1rem; }
 }
 `;
 
 // -- Scoped styles --
 
 const container = css`
-  max-width: 640px;
+  max-width: 600px;
   margin: 0 auto;
-  padding: 3.5rem 1.5rem 2.5rem;
+  padding: 5rem 1.5rem 3rem;
   @media (max-width: 640px) {
-    padding: 2rem 1.25rem 2rem;
+    padding: 3rem 1.25rem 2rem;
   }
 `;
 
-const headerStyle = css`
-  margin-bottom: 3rem;
-  @media (max-width: 640px) {
-    margin-bottom: 2rem;
+const nameStyle = css`
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+`;
+
+const bioStyle = css`
+  color: #8a8a8a;
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  & a {
+    text-decoration: underline;
+    text-decoration-color: #c0bfbd;
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.15s;
   }
+  & a:hover { text-decoration-color: #8a8a8a; }
 `;
 
-const siteNameStyle = css`
-  font-size: 1.0625rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-`;
-
-const navStyle = css`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.25rem;
+const topLinks = css`
   margin-top: 0.75rem;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
+  color: #8a8a8a;
+  display: flex;
+  gap: 1.25rem;
+  & a { transition: color 0.15s; }
+  & a:hover { color: #1a1a1a; }
+`;
+
+const rule = css`
+  width: 40px;
+  height: 1px;
+  background: #d0cfcd;
+  margin: 3rem 0;
   @media (max-width: 640px) {
-    gap: 1rem;
-    font-size: 0.8125rem;
+    margin: 2.5rem 0;
   }
 `;
 
-const navLink = css`
-  color: #a1a1aa;
-  transition: color 0.15s;
-  &:hover { color: #171717; }
+const sectionLabel = css`
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #8a8a8a;
+  margin-bottom: 1.5rem;
 `;
 
-const navLinkActive = css`
-  color: #171717;
+const projectBlock = css`
+  margin-bottom: 1.25rem;
 `;
 
-const tagFilterStyle = css`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-  margin-bottom: 2rem;
+const projectName = css`
+  font-weight: 500;
+  & a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 `;
 
-const tagPill = css`
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.8125rem;
-  border: 1px solid #e4e4e7;
-  color: #71717a;
-  transition: all 0.15s;
-  &:hover { color: #171717; border-color: #a1a1aa; }
+const projectDesc = css`
+  color: #8a8a8a;
+  font-size: 0.9rem;
+  margin-top: 0.125rem;
 `;
 
-const tagPillActive = css`
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.8125rem;
-  background: #18181b;
-  color: #fff;
-  border: 1px solid #18181b;
-`;
-
-const postListStyle = css`
+const postList = css`
   list-style: none;
   padding: 0;
 `;
 
-const postItemStyle = css`
-  margin-bottom: 1.125rem;
+const postItem = css`
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 0.625rem;
+  & a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 `;
 
 const postTitleStyle = css`
-  font-size: 0.9375rem;
-  font-weight: 500;
-  line-height: 1.4;
-  & a:hover {
-    text-decoration: underline;
-    text-decoration-color: #a1a1aa;
-    text-underline-offset: 3px;
-  }
+  font-size: 0.95rem;
 `;
 
-const postMetaStyle = css`
-  font-size: 0.8125rem;
-  color: #a1a1aa;
-  margin-top: 0.0625rem;
+const postYear = css`
+  color: #8a8a8a;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 `;
 
-const articleHeaderStyle = css`
+const backLink = css`
+  font-size: 0.85rem;
+  color: #8a8a8a;
+  transition: color 0.15s;
+  &:hover { color: #1a1a1a; }
+`;
+
+const articleHeader = css`
+  margin-top: 2rem;
   & h1 {
     margin-top: 0;
-    margin-bottom: 0.5rem;
-    letter-spacing: -0.025em;
+    margin-bottom: 0.375rem;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
   }
 `;
 
-const articleBodyStyle = css`
-  margin-top: 2rem;
+const articleMeta = css`
+  color: #8a8a8a;
+  font-size: 0.9rem;
+`;
+
+const articleBody = css`
+  margin-top: 2.5rem;
   & a {
     text-decoration: underline;
-    text-decoration-color: #d4d4d8;
+    text-decoration-color: #d0cfcd;
     text-underline-offset: 3px;
     transition: text-decoration-color 0.15s;
   }
-  & a:hover { text-decoration-color: #171717; }
+  & a:hover { text-decoration-color: #1a1a1a; }
 `;
 
 const proseLinks = css`
   & a {
     text-decoration: underline;
-    text-decoration-color: #d4d4d8;
+    text-decoration-color: #d0cfcd;
     text-underline-offset: 3px;
     transition: text-decoration-color 0.15s;
   }
-  & a:hover { text-decoration-color: #171717; }
+  & a:hover { text-decoration-color: #1a1a1a; }
 `;
 
 const footerStyle = css`
-  margin-top: 4rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid #e4e4e7;
-  font-size: 0.8125rem;
-  color: #a1a1aa;
+  margin-top: 3rem;
+  font-size: 0.85rem;
+  color: #8a8a8a;
   display: flex;
-  gap: 1rem;
-  & a { color: #a1a1aa; transition: color 0.15s; }
-  & a:hover { color: #171717; }
+  gap: 1.25rem;
+  & a { transition: color 0.15s; }
+  & a:hover { color: #1a1a1a; }
 `;
 
 // -- Helpers --
 
-const NAV_ITEMS = [
-  { href: "/", label: "Posts" },
-  { href: "/about-me", label: "About" },
-  { href: "/notes", label: "Notes" },
-  { href: "/concepts", label: "Concepts" },
-];
-
-function formatDateShort(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("en-US", { year: "numeric", month: "short" });
+function formatYear(dateStr: string): string {
+  return dateStr.slice(0, 4);
 }
 
 function formatDateFull(dateStr: string): string {
@@ -234,16 +243,14 @@ function formatDateFull(dateStr: string): string {
 
 // -- Layout --
 
-function Layout({
+function Shell({
   title,
   description,
-  path,
   katexCss,
   children,
 }: {
   title: string;
   description?: string;
-  path?: string;
   katexCss?: boolean;
   children: unknown;
 }) {
@@ -252,7 +259,7 @@ function Layout({
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" content="#faf9f7" />
         <title>{title}</title>
         {description && <meta name="description" content={description} />}
         <link rel="icon" href="/content/assets/favicon/favicon.ico" sizes="any" />
@@ -261,7 +268,7 @@ function Layout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400..600&family=JetBrains+Mono&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..500;1,6..72,400..500&family=JetBrains+Mono&display=swap"
           rel="stylesheet"
         />
         {katexCss && (
@@ -275,27 +282,21 @@ function Layout({
         <Style />
       </head>
       <body>
-        <div class={container}>
-          <header class={headerStyle}>
-            <div class={siteNameStyle}>
-              <a href="/">Marcos Pereira</a>
-            </div>
-            <nav class={navStyle}>
-              {NAV_ITEMS.map((item) => (
-                <a href={item.href} class={path === item.href ? navLinkActive : navLink}>
-                  {item.label}
-                </a>
-              ))}
-            </nav>
-          </header>
-          <main>{children}</main>
-          <footer class={footerStyle}>
-            <a href="https://x.com/marcospereeira">X</a>
-            <a href="https://github.com/marcospgp">GitHub</a>
-          </footer>
-        </div>
+        <div class={container}>{children}</div>
       </body>
     </html>
+  );
+}
+
+function Footer() {
+  return (
+    <>
+      <div class={rule} />
+      <footer class={footerStyle}>
+        <a href="https://x.com/marcospereeira">X</a>
+        <a href="https://github.com/marcospgp">GitHub</a>
+      </footer>
+    </>
   );
 }
 
@@ -307,36 +308,67 @@ app.use("/content/assets/*", serveStatic({ root: "./" }));
 app.get("/health", (c) => c.text("ok"));
 app.get("/robots.txt", (c) => c.text("User-agent: *\nAllow: /\n"));
 
-// Home
+// Home — single page with identity, projects, writing
 app.get("/", (c) => {
-  const tag = c.req.query("tag");
-  const filtered = tag ? posts.filter((p) => p.tag === tag) : posts;
-
   return c.html(
-    <Layout title="Marcos Pereira" description="Developer from Portugal. Writing about web, AI, and game dev." path="/">
-      <div class={tagFilterStyle}>
-        <a href="/" class={!tag ? tagPillActive : tagPill}>
-          All
-        </a>
-        {tags.map(([t]) => (
-          <a href={`/?tag=${encodeURIComponent(t)}`} class={tag === t ? tagPillActive : tagPill}>
-            {t}
-          </a>
-        ))}
+    <Shell title="Marcos Pereira" description="Developer from Portugal. Building software with AI.">
+      <div class={nameStyle}>Marcos Pereira</div>
+      <div class={bioStyle}>
+        Developer from Portugal.
+        <br />
+        Building <a href="https://hesoyam.zip">hesoyam</a>, a software studio.
       </div>
-      <ul class={postListStyle}>
-        {filtered.map((post) => (
-          <li class={postItemStyle}>
-            <div class={postTitleStyle}>
+      <div class={topLinks}>
+        <a href="https://x.com/marcospereeira">X</a>
+        <a href="https://github.com/marcospgp">GitHub</a>
+      </div>
+
+      <div class={rule} />
+
+      <div class={sectionLabel}>Projects</div>
+      <div class={projectBlock}>
+        <div class={projectName}>
+          <a href="https://clawr.ing">clawr.ing</a>
+        </div>
+        <div class={projectDesc}>Phone calling skill for OpenClaw</div>
+      </div>
+      <div class={projectBlock}>
+        <div class={projectName}>
+          <a href="https://inkandquill.app">inkandquill.app</a>
+        </div>
+        <div class={projectDesc}>Voice adventures with AI</div>
+      </div>
+
+      <div class={rule} />
+
+      <div class={sectionLabel}>Highlighted</div>
+      <ul class={postList}>
+        {posts.filter((p) => p.pinned).map((post) => (
+          <li class={postItem}>
+            <span class={postTitleStyle}>
               <a href={post.path}>{post.title}</a>
-            </div>
-            <div class={postMetaStyle}>
-              {formatDateShort(post.date)} · {post.tag}
-            </div>
+            </span>
+            <span class={postYear}>{formatYear(post.date)}</span>
           </li>
         ))}
       </ul>
-    </Layout>,
+
+      <div class={rule} />
+
+      <div class={sectionLabel}>Writing</div>
+      <ul class={postList}>
+        {postsByDate.map((post) => (
+          <li class={postItem}>
+            <span class={postTitleStyle}>
+              <a href={post.path}>{post.title}</a>
+            </span>
+            <span class={postYear}>{formatYear(post.date)}</span>
+          </li>
+        ))}
+      </ul>
+
+      <Footer />
+    </Shell>,
   );
 });
 
@@ -349,32 +381,33 @@ app.get("/:year/:month/:day/:slug/", (c) => {
   if (!post) return c.notFound();
 
   return c.html(
-    <Layout
-      title={`${post.title} | Marcos Pereira`}
-      description={post.description}
-      path={postPath}
-      katexCss={post.hasLatex}
-    >
-      <article>
-        <div class={articleHeaderStyle}>
-          <h1>{post.title}</h1>
-          <div class={postMetaStyle}>
-            {formatDateFull(post.date)} · {post.tag}
-          </div>
-        </div>
-        <div class={articleBodyStyle} dangerouslySetInnerHTML={{ __html: post.html }} />
-      </article>
-    </Layout>,
+    <Shell title={`${post.title} | Marcos Pereira`} description={post.description} katexCss={post.hasLatex}>
+      <a href="/" class={backLink}>
+        ← Marcos Pereira
+      </a>
+      <div class={articleHeader}>
+        <h1>{post.title}</h1>
+        <div class={articleMeta}>{formatDateFull(post.date)}</div>
+      </div>
+      <div class={articleBody} dangerouslySetInnerHTML={{ __html: post.html }} />
+      <Footer />
+    </Shell>,
   );
 });
 
-// Static pages (resume still accessible via direct URL but not in nav)
+// Static pages (notes, concepts, resume, about — accessible via direct URL)
 for (const page of pages) {
   app.get(page.path, (c) =>
     c.html(
-      <Layout title={`${page.title} | Marcos Pereira`} path={page.path}>
-        <div class={proseLinks} dangerouslySetInnerHTML={{ __html: page.html }} />
-      </Layout>,
+      <Shell title={`${page.title} | Marcos Pereira`}>
+        <a href="/" class={backLink}>
+          ← Marcos Pereira
+        </a>
+        <div style="margin-top: 2rem;">
+          <div class={proseLinks} dangerouslySetInnerHTML={{ __html: page.html }} />
+        </div>
+        <Footer />
+      </Shell>,
     ),
   );
 }
@@ -382,14 +415,14 @@ for (const page of pages) {
 // 404
 app.notFound((c) =>
   c.html(
-    <Layout title="Not Found | Marcos Pereira">
-      <h1>Page not found</h1>
+    <Shell title="Not Found | Marcos Pereira">
+      <h1 style="margin-top: 0;">Not found</h1>
       <p>
         <a href="/" style="text-decoration: underline; text-underline-offset: 3px">
-          Go home
+          Home
         </a>
       </p>
-    </Layout>,
+    </Shell>,
     404,
   ),
 );

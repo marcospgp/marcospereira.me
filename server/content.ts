@@ -198,6 +198,9 @@ export const posts: Post[] = (() => {
   return [...pinned, ...regular];
 })();
 
+/** All published posts in pure chronological order (newest first). */
+export const postsByDate: Post[] = loadPosts();
+
 /** All static pages. */
 export const pages: Page[] = loadPages();
 
