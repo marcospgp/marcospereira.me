@@ -124,6 +124,41 @@ function parseFrontmatter(raw: string): {
   return { meta, body: match[2] };
 }
 
+/** Convert Jekyll/Liquid syntax to standard markdown. */
+function stripJekyll(body: string, currentPostPath: string): string {
+  let result = body;
+
+  // /assets/ → /content/assets/ (old path convention)
+  result = result.replace(/\(\/assets\//g, "(/content/assets/");
+
+  // {% link assets/... %} → /content/assets/...
+  result = result.replace(/\{%\s*link\s+assets\/([^%]+?)\s*%\}/g, "/content/assets/$1");
+
+  // {% post_link SLUG %} → link to post (slug format: YYYY-MM-DD-title)
+  result = result.replace(/\{%\s*post_link\s+(\S+)\s*%\}/g, (_, slug: string) => {
+    const dateMatch = slug.match(/^(\d{4})-(\d{2})-(\d{2})-(.+)$/);
+    if (dateMatch) {
+      const [, y, m, d, s] = dateMatch;
+      return `[${s.replace(/-/g, " ")}](/${y}/${m}/${d}/${s}/)`;
+    }
+    return slug;
+  });
+
+  // {% comment %}...{% endcomment %} → remove
+  result = result.replace(/\{%\s*comment\s*%\}[\s\S]*?\{%\s*endcomment\s*%\}/g, "");
+
+  // {% raw %}...{% endraw %} → keep content, strip tags
+  result = result.replace(/\{%\s*raw\s*%\}/g, "");
+  result = result.replace(/\{%\s*endraw\s*%\}/g, "");
+
+  // {% set ... %} → keep as-is (inside code blocks, will render as text)
+
+  // {: width="400px" } Kramdown attribute syntax → remove
+  result = result.replace(/\{:\s*[^}]+\}/g, "");
+
+  return result;
+}
+
 function loadPosts(): Post[] {
   const postsDir = path.join(CONTENT_DIR, "posts");
   const files = fs
@@ -146,7 +181,7 @@ function loadPosts(): Post[] {
     const date = `${year}-${month}-${day}`;
     const postPath = `/${year}/${month}/${day}/${slugPart}/`;
 
-    const fixedBody = body.replace(/\(\/assets\//g, "(/content/assets/");
+    const fixedBody = stripJekyll(body, postPath);
     const { text: safeBody, blocks: mathBlocks } = extractMath(fixedBody);
     const rawHtml = marked.parse(safeBody) as string;
     const { result: html, found: hasLatex } = renderMathBlocks(rawHtml, mathBlocks);
@@ -182,7 +217,7 @@ function loadPages(): Page[] {
     pages.push({
       slug,
       title: meta.title ?? slug,
-      html: marked.parse(body) as string,
+      html: marked.parse(stripJekyll(body, `/${slug}`)) as string,
       path: `/${slug}`,
     });
   }
