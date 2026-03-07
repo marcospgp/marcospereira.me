@@ -1,4 +1,4 @@
-/** Personal website — Hono JSX SSR with Newsreader + JetBrains Mono + KaTeX. */
+/** Personal website — Hono JSX SSR. Newsreader + JetBrains Mono + KaTeX. */
 import { Hono } from "hono";
 import { serveStatic } from "hono/bun";
 import { Style, css } from "hono/css";
