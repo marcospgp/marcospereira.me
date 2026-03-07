@@ -383,7 +383,7 @@ app.get("/:year/:month/:day/:slug/", (c) => {
   return c.html(
     <Shell title={`${post.title} | Marcos Pereira`} description={post.description} katexCss={post.hasLatex}>
       <a href="/" class={backLink}>
-        ← Marcos Pereira
+        ← Home
       </a>
       <div class={articleHeader}>
         <h1>{post.title}</h1>
