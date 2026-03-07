@@ -330,7 +330,7 @@ app.get("/", (c) => {
         <div class={projectName}>
           <a href="https://clawr.ing">clawr.ing</a>
         </div>
-        <div class={projectDesc}>Phone calling skill for OpenClaw</div>
+        <div class={projectDesc}>The phone calling skill for OpenClaw</div>
       </div>
       <div class={projectBlock}>
         <div class={projectName}>
