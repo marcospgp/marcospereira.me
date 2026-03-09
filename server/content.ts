@@ -33,6 +33,8 @@ export type Post = {
   html: string;
   /** True if post contains LaTeX and needs KaTeX CSS. */
   hasLatex: boolean;
+  /** True if post has GitHub Gist embeds that need client-side loading. */
+  hasGists: boolean;
   /** URL path like /2023/12/15/floating-point/ */
   path: string;
 };
@@ -186,6 +188,13 @@ function stripJekyll(body: string, currentPostPath: string): string {
   // {: width="400px" } Kramdown attribute syntax → remove
   result = result.replace(/\{:\s*[^}]+\}/g, "");
 
+  // GitHub Gist <script> embeds use document.write() which breaks after page load.
+  // Replace with placeholder divs loaded client-side via JSONP.
+  result = result.replace(
+    /<script\s+src="(https:\/\/gist\.github\.com\/[^"]+\.js)"\s*><\/script>/g,
+    (_, src: string) => `<div class="gist-embed" data-src="${src}"></div>`,
+  );
+
   return result;
 }
 
@@ -228,6 +237,7 @@ function loadPosts(): Post[] {
       description: meta.description ?? "",
       html,
       hasLatex,
+      hasGists: html.includes("gist-embed"),
       path: postPath,
     });
   }

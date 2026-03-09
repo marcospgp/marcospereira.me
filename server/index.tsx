@@ -98,7 +98,9 @@ const bioStyle = css`
     text-underline-offset: 3px;
     transition: text-decoration-color 0.15s;
   }
-  & a:hover { text-decoration-color: #8a8a8a; }
+  & a:hover {
+    text-decoration-color: #8a8a8a;
+  }
 `;
 
 const topLinks = css`
@@ -107,8 +109,12 @@ const topLinks = css`
   color: #8a8a8a;
   display: flex;
   gap: 1.25rem;
-  & a { transition: color 0.15s; }
-  & a:hover { color: #1a1a1a; }
+  & a {
+    transition: color 0.15s;
+  }
+  & a:hover {
+    color: #1a1a1a;
+  }
 `;
 
 const rule = css`
@@ -122,7 +128,8 @@ const rule = css`
 `;
 
 const sectionLabel = css`
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   font-size: 0.7rem;
   font-weight: 500;
   text-transform: uppercase;
@@ -174,14 +181,17 @@ const postYear = css`
   color: #8a8a8a;
   font-size: 0.8rem;
   flex-shrink: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
 `;
 
 const backLink = css`
   font-size: 0.85rem;
   color: #8a8a8a;
   transition: color 0.15s;
-  &:hover { color: #1a1a1a; }
+  &:hover {
+    color: #1a1a1a;
+  }
 `;
 
 const articleHeader = css`
@@ -207,7 +217,9 @@ const articleBody = css`
     text-underline-offset: 3px;
     transition: text-decoration-color 0.15s;
   }
-  & a:hover { text-decoration-color: #1a1a1a; }
+  & a:hover {
+    text-decoration-color: #1a1a1a;
+  }
 `;
 
 const proseLinks = css`
@@ -217,7 +229,9 @@ const proseLinks = css`
     text-underline-offset: 3px;
     transition: text-decoration-color 0.15s;
   }
-  & a:hover { text-decoration-color: #1a1a1a; }
+  & a:hover {
+    text-decoration-color: #1a1a1a;
+  }
 `;
 
 const footerStyle = css`
@@ -226,8 +240,12 @@ const footerStyle = css`
   color: #8a8a8a;
   display: flex;
   gap: 1.25rem;
-  & a { transition: color 0.15s; }
-  & a:hover { color: #1a1a1a; }
+  & a {
+    transition: color 0.15s;
+  }
+  & a:hover {
+    color: #1a1a1a;
+  }
 `;
 
 // -- Helpers --
@@ -238,7 +256,11 @@ function formatYear(dateStr: string): string {
 
 function formatDateFull(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 }
 
 // -- Layout --
@@ -262,11 +284,26 @@ function Shell({
         <meta name="theme-color" content="#faf9f7" />
         <title>{title}</title>
         {description && <meta name="description" content={description} />}
-        <link rel="icon" href="/content/assets/favicon/favicon.ico" sizes="any" />
-        <link rel="icon" href="/content/assets/favicon/favicon-32x32.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/content/assets/favicon/apple-touch-icon.png" />
+        <link
+          rel="icon"
+          href="/content/assets/favicon/favicon.ico"
+          sizes="any"
+        />
+        <link
+          rel="icon"
+          href="/content/assets/favicon/favicon-32x32.png"
+          type="image/png"
+        />
+        <link
+          rel="apple-touch-icon"
+          href="/content/assets/favicon/apple-touch-icon.png"
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin=""
+        />
         <link
           href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..500;1,6..72,400..500&family=JetBrains+Mono&display=swap"
           rel="stylesheet"
@@ -302,7 +339,10 @@ function Footer() {
 
 // -- Routes --
 
-app.use("/favicon.ico", serveStatic({ path: "./content/assets/favicon/favicon.ico" }));
+app.use(
+  "/favicon.ico",
+  serveStatic({ path: "./content/assets/favicon/favicon.ico" }),
+);
 app.use("/content/assets/*", serveStatic({ root: "./" }));
 
 app.get("/health", (c) => c.text("ok"));
@@ -311,7 +351,10 @@ app.get("/robots.txt", (c) => c.text("User-agent: *\nAllow: /\n"));
 // Home — single page with identity, projects, writing
 app.get("/", (c) => {
   return c.html(
-    <Shell title="Marcos Pereira" description="Developer from Portugal. Building software with AI.">
+    <Shell
+      title="Marcos Pereira"
+      description="Developer from Portugal. Building software with AI."
+    >
       <div class={nameStyle}>Marcos Pereira</div>
       <div class={bioStyle}>
         Developer from Portugal.
@@ -343,14 +386,16 @@ app.get("/", (c) => {
 
       <div class={sectionLabel}>Highlighted</div>
       <ul class={postList}>
-        {posts.filter((p) => p.pinned).map((post) => (
-          <li class={postItem}>
-            <span class={postTitleStyle}>
-              <a href={post.path}>{post.title}</a>
-            </span>
-            <span class={postYear}>{formatYear(post.date)}</span>
-          </li>
-        ))}
+        {posts
+          .filter((p) => p.pinned)
+          .map((post) => (
+            <li class={postItem}>
+              <span class={postTitleStyle}>
+                <a href={post.path}>{post.title}</a>
+              </span>
+              <span class={postYear}>{formatYear(post.date)}</span>
+            </li>
+          ))}
       </ul>
 
       <div class={rule} />
@@ -381,7 +426,11 @@ app.get("/:year/:month/:day/:slug/", (c) => {
   if (!post) return c.notFound();
 
   return c.html(
-    <Shell title={`${post.title} | Marcos Pereira`} description={post.description} katexCss={post.hasLatex}>
+    <Shell
+      title={`${post.title} | Marcos Pereira`}
+      description={post.description}
+      katexCss={post.hasLatex}
+    >
       <a href="/" class={backLink}>
         ← Home
       </a>
@@ -389,7 +438,32 @@ app.get("/:year/:month/:day/:slug/", (c) => {
         <h1>{post.title}</h1>
         <div class={articleMeta}>{formatDateFull(post.date)}</div>
       </div>
-      <div class={articleBody} dangerouslySetInnerHTML={{ __html: post.html }} />
+      <div
+        class={articleBody}
+        dangerouslySetInnerHTML={{ __html: post.html }}
+      />
+      {post.hasGists && (
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+document.querySelectorAll(".gist-embed").forEach(function(el) {
+  var src = el.dataset.src;
+  var id = "gist_cb_" + Math.random().toString(36).slice(2);
+  window[id] = function(data) {
+    el.innerHTML = data.div;
+    var link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = data.stylesheet;
+    document.head.appendChild(link);
+    delete window[id];
+  };
+  var s = document.createElement("script");
+  s.src = src + "?callback=" + id;
+  document.body.appendChild(s);
+});`,
+          }}
+        />
+      )}
       <Footer />
     </Shell>,
   );
@@ -404,7 +478,10 @@ for (const page of pages) {
           ← Marcos Pereira
         </a>
         <div style="margin-top: 2rem;">
-          <div class={proseLinks} dangerouslySetInnerHTML={{ __html: page.html }} />
+          <div
+            class={proseLinks}
+            dangerouslySetInnerHTML={{ __html: page.html }}
+          />
         </div>
         <Footer />
       </Shell>,
@@ -418,7 +495,10 @@ app.notFound((c) =>
     <Shell title="Not Found | Marcos Pereira">
       <h1 style="margin-top: 0;">Not found</h1>
       <p>
-        <a href="/" style="text-decoration: underline; text-underline-offset: 3px">
+        <a
+          href="/"
+          style="text-decoration: underline; text-underline-offset: 3px"
+        >
           Home
         </a>
       </p>
