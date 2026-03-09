@@ -188,51 +188,57 @@ function stripJekyll(body: string, currentPostPath: string): string {
   // {: width="400px" } Kramdown attribute syntax → remove
   result = result.replace(/\{:\s*[^}]+\}/g, "");
 
-  // GitHub Gist <script> embeds use document.write() which breaks after page load.
-  // Replaced with fetched HTML at startup via resolveGistEmbeds().
-  result = result.replace(
-    /<script\s+src="(https:\/\/gist\.github\.com\/[^"]+)\.js"\s*><\/script>/g,
-    (_, gistUrl: string) => `%%GIST_EMBED:${gistUrl}%%`,
-  );
-
   return result;
 }
 
-/** Fetch gist HTML from GitHub's JSON API and inline it, replacing %%GIST_EMBED:url%% placeholders. */
-async function resolveGistEmbeds(html: string): Promise<{
-  result: string;
-  hasGists: boolean;
-  stylesheet: string | null;
-}> {
-  const gistPattern = /%%GIST_EMBED:(https:\/\/gist\.github\.com\/[^%]+)%%/g;
-  const matches = [...html.matchAll(gistPattern)];
-  if (matches.length === 0)
-    return { result: html, hasGists: false, stylesheet: null };
+/** Extract gist script embeds before markdown processing (like extractMath). */
+function extractGists(source: string): {
+  text: string;
+  urls: string[];
+} {
+  const urls: string[] = [];
+  const text = source.replace(
+    /<script\s+src="(https:\/\/gist\.github\.com\/[^"]+)\.js"\s*><\/script>/g,
+    (_, gistUrl: string) => {
+      const idx = urls.length;
+      urls.push(gistUrl);
+      return `%%GIST_${idx}%%`;
+    },
+  );
+  return { text, urls };
+}
+
+/** Fetch gist HTML from GitHub's JSON API, replacing %%GIST_N%% placeholders. */
+async function resolveGists(
+  html: string,
+  urls: string[],
+): Promise<{ result: string; stylesheet: string | null }> {
+  if (urls.length === 0) return { result: html, stylesheet: null };
 
   let result = html;
   let stylesheet: string | null = null;
 
-  for (const match of matches) {
-    const gistUrl = match[1];
+  for (let i = 0; i < urls.length; i++) {
+    const gistUrl = urls[i];
+    const placeholder = `%%GIST_${i}%%`;
     try {
       const res = await fetch(`${gistUrl}.json`);
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-      const data = (await res.json()) as {
-        div: string;
-        stylesheet: string;
-      };
-      result = result.replace(match[0], data.div);
+      const data = (await res.json()) as { div: string; stylesheet: string };
+      // Strip wrapping <p> tag if marked added one around the placeholder.
+      result = result.replace(`<p>${placeholder}</p>`, data.div);
+      result = result.replace(placeholder, data.div);
       stylesheet ??= data.stylesheet;
     } catch (err) {
       console.error(`Failed to fetch gist ${gistUrl}:`, err);
       result = result.replace(
-        match[0],
+        placeholder,
         `<p><a href="${gistUrl}">View gist on GitHub</a></p>`,
       );
     }
   }
 
-  return { result, hasGists: true, stylesheet };
+  return { result, stylesheet };
 }
 
 async function loadPosts(): Promise<Post[]> {
@@ -258,17 +264,17 @@ async function loadPosts(): Promise<Post[]> {
     const postPath = `/${year}/${month}/${day}/${slugPart}/`;
 
     const fixedBody = stripJekyll(body, postPath);
-    const { text: safeBody, blocks: mathBlocks } = extractMath(fixedBody);
+    const { text: noGists, urls: gistUrls } = extractGists(fixedBody);
+    const { text: safeBody, blocks: mathBlocks } = extractMath(noGists);
     const rawHtml = marked.parse(safeBody) as string;
     const { result: mathHtml, found: hasLatex } = renderMathBlocks(
       rawHtml,
       mathBlocks,
     );
-    const {
-      result: html,
-      hasGists,
-      stylesheet: gistStylesheet,
-    } = await resolveGistEmbeds(mathHtml);
+    const { result: html, stylesheet: gistStylesheet } = await resolveGists(
+      mathHtml,
+      gistUrls,
+    );
 
     posts.push({
       slug: slugPart,
@@ -279,7 +285,7 @@ async function loadPosts(): Promise<Post[]> {
       description: meta.description ?? "",
       html,
       hasLatex,
-      gistStylesheet: hasGists ? gistStylesheet : null,
+      gistStylesheet,
       path: postPath,
     });
   }
