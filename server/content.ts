@@ -49,16 +49,29 @@ export type Page = {
  * replacing them with placeholders. This prevents markdown from converting
  * LaTeX underscores to <em> tags and braces to other elements.
  */
-function extractMath(source: string): { text: string; blocks: { tex: string; display: boolean }[] } {
+function extractMath(source: string): {
+  text: string;
+  blocks: { tex: string; display: boolean }[];
+} {
   const blocks: { tex: string; display: boolean }[] = [];
   const PLACEHOLDER = "%%MATH_BLOCK_";
 
-  // Display math: $$...$$
-  let text = source.replace(/\$\$([\s\S]*?)\$\$/g, (_, tex: string) => {
-    const idx = blocks.length;
-    blocks.push({ tex: tex.trim(), display: true });
-    return `${PLACEHOLDER}${idx}%%`;
-  });
+  // Math: $$...$$ — display when alone on a line, inline when mixed with text.
+  let text = source.replace(
+    /\$\$([\s\S]*?)\$\$/g,
+    (match, tex: string, offset: number) => {
+      const lineStart = source.lastIndexOf("\n", offset) + 1;
+      const lineEnd = source.indexOf("\n", offset + match.length);
+      const line = source.slice(
+        lineStart,
+        lineEnd === -1 ? undefined : lineEnd,
+      );
+      const display = line.trim() === match.trim();
+      const idx = blocks.length;
+      blocks.push({ tex: tex.trim(), display });
+      return `${PLACEHOLDER}${idx}%%`;
+    },
+  );
 
   // Inline math: $...$
   text = text.replace(/(?<![\\$])\$([^\n$]+?)\$(?!\$)/g, (_, tex: string) => {
@@ -71,7 +84,10 @@ function extractMath(source: string): { text: string; blocks: { tex: string; dis
 }
 
 /** Render extracted math blocks back into the HTML after markdown processing. */
-function renderMathBlocks(html: string, blocks: { tex: string; display: boolean }[]): { result: string; found: boolean } {
+function renderMathBlocks(
+  html: string,
+  blocks: { tex: string; display: boolean }[],
+): { result: string; found: boolean } {
   if (blocks.length === 0) return { result: html, found: false };
 
   const katexOpts = { throwOnError: false, trust: true };
@@ -79,13 +95,18 @@ function renderMathBlocks(html: string, blocks: { tex: string; display: boolean 
   // Strip \label{...} and resolve \eqref{N} → (N) since cross-block
   // references don't work when each block is rendered independently.
   const cleanTex = (tex: string) =>
-    tex.replace(/\\label\{[^}]*\}/g, "").replace(/\\eqref\{([^}]+)\}/g, "(\\text{$1})");
+    tex
+      .replace(/\\label\{[^}]*\}/g, "")
+      .replace(/\\eqref\{([^}]+)\}/g, "(\\text{$1})");
 
   let result = html.replace(/%%MATH_BLOCK_(\d+)%%/g, (_, idxStr: string) => {
     const idx = Number(idxStr);
     const block = blocks[idx];
     try {
-      return katex.renderToString(cleanTex(block.tex), { ...katexOpts, displayMode: block.display });
+      return katex.renderToString(cleanTex(block.tex), {
+        ...katexOpts,
+        displayMode: block.display,
+      });
     } catch {
       return `<code>${block.tex}</code>`;
     }
@@ -132,20 +153,29 @@ function stripJekyll(body: string, currentPostPath: string): string {
   result = result.replace(/\(\/assets\//g, "(/content/assets/");
 
   // {% link assets/... %} → /content/assets/...
-  result = result.replace(/\{%\s*link\s+assets\/([^%]+?)\s*%\}/g, "/content/assets/$1");
+  result = result.replace(
+    /\{%\s*link\s+assets\/([^%]+?)\s*%\}/g,
+    "/content/assets/$1",
+  );
 
   // {% post_link SLUG %} → link to post (slug format: YYYY-MM-DD-title)
-  result = result.replace(/\{%\s*post_link\s+(\S+)\s*%\}/g, (_, slug: string) => {
-    const dateMatch = slug.match(/^(\d{4})-(\d{2})-(\d{2})-(.+)$/);
-    if (dateMatch) {
-      const [, y, m, d, s] = dateMatch;
-      return `[${s.replace(/-/g, " ")}](/${y}/${m}/${d}/${s}/)`;
-    }
-    return slug;
-  });
+  result = result.replace(
+    /\{%\s*post_link\s+(\S+)\s*%\}/g,
+    (_, slug: string) => {
+      const dateMatch = slug.match(/^(\d{4})-(\d{2})-(\d{2})-(.+)$/);
+      if (dateMatch) {
+        const [, y, m, d, s] = dateMatch;
+        return `[${s.replace(/-/g, " ")}](/${y}/${m}/${d}/${s}/)`;
+      }
+      return slug;
+    },
+  );
 
   // {% comment %}...{% endcomment %} → remove
-  result = result.replace(/\{%\s*comment\s*%\}[\s\S]*?\{%\s*endcomment\s*%\}/g, "");
+  result = result.replace(
+    /\{%\s*comment\s*%\}[\s\S]*?\{%\s*endcomment\s*%\}/g,
+    "",
+  );
 
   // {% raw %}...{% endraw %} → keep content, strip tags
   result = result.replace(/\{%\s*raw\s*%\}/g, "");
@@ -184,7 +214,10 @@ function loadPosts(): Post[] {
     const fixedBody = stripJekyll(body, postPath);
     const { text: safeBody, blocks: mathBlocks } = extractMath(fixedBody);
     const rawHtml = marked.parse(safeBody) as string;
-    const { result: html, found: hasLatex } = renderMathBlocks(rawHtml, mathBlocks);
+    const { result: html, found: hasLatex } = renderMathBlocks(
+      rawHtml,
+      mathBlocks,
+    );
 
     posts.push({
       slug: slugPart,
