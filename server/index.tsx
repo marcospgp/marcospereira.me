@@ -317,7 +317,17 @@ function Shell({
             crossorigin=""
           />
         )}
-        {gistCss && <link rel="stylesheet" href={gistCss} />}
+        {gistCss && (
+          <>
+            <link rel="stylesheet" href={gistCss} />
+            <style
+              dangerouslySetInnerHTML={{
+                __html:
+                  ".gist .render-container > span, .gist .render-viewer-error, .gist .render-viewer-fatal, .gist .render-viewer-invalid { display: none; }",
+              }}
+            />
+          </>
+        )}
         <style dangerouslySetInnerHTML={{ __html: globalCss }} />
         <Style />
       </head>
