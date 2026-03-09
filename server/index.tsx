@@ -269,13 +269,11 @@ function Shell({
   title,
   description,
   katexCss,
-  gistCss,
   children,
 }: {
   title: string;
   description?: string;
   katexCss?: boolean;
-  gistCss?: string | null;
   children: unknown;
 }) {
   return (
@@ -316,17 +314,6 @@ function Shell({
             href="https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/katex.min.css"
             crossorigin=""
           />
-        )}
-        {gistCss && (
-          <>
-            <link rel="stylesheet" href={gistCss} />
-            <style
-              dangerouslySetInnerHTML={{
-                __html:
-                  ".gist .render-container > span, .gist .render-viewer-error, .gist .render-viewer-fatal, .gist .render-viewer-invalid { display: none; }",
-              }}
-            />
-          </>
         )}
         <style dangerouslySetInnerHTML={{ __html: globalCss }} />
         <Style />
@@ -443,7 +430,6 @@ app.get("/:year/:month/:day/:slug/", (c) => {
       title={`${post.title} | Marcos Pereira`}
       description={post.description}
       katexCss={post.hasLatex}
-      gistCss={post.gistStylesheet}
     >
       <a href="/" class={backLink}>
         ← Home

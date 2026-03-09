@@ -33,8 +33,6 @@ export type Post = {
   html: string;
   /** True if post contains LaTeX and needs KaTeX CSS. */
   hasLatex: boolean;
-  /** GitHub Gist embed stylesheet URL, if post has gists. */
-  gistStylesheet: string | null;
   /** URL path like /2023/12/15/floating-point/ */
   path: string;
 };
@@ -188,60 +186,16 @@ function stripJekyll(body: string, currentPostPath: string): string {
   // {: width="400px" } Kramdown attribute syntax → remove
   result = result.replace(/\{:\s*[^}]+\}/g, "");
 
+  // GitHub Gist <script> embeds use document.write() — replace with a link.
+  result = result.replace(
+    /<script\s+src="(https:\/\/gist\.github\.com\/[^"]+)\.js"\s*><\/script>/g,
+    (_, gistUrl: string) => `[View notebook on GitHub](${gistUrl})`,
+  );
+
   return result;
 }
 
-/** Extract gist script embeds before markdown processing (like extractMath). */
-function extractGists(source: string): {
-  text: string;
-  urls: string[];
-} {
-  const urls: string[] = [];
-  const text = source.replace(
-    /<script\s+src="(https:\/\/gist\.github\.com\/[^"]+)\.js"\s*><\/script>/g,
-    (_, gistUrl: string) => {
-      const idx = urls.length;
-      urls.push(gistUrl);
-      return `%%GIST_${idx}%%`;
-    },
-  );
-  return { text, urls };
-}
-
-/** Fetch gist HTML from GitHub's JSON API, replacing %%GIST_N%% placeholders. */
-async function resolveGists(
-  html: string,
-  urls: string[],
-): Promise<{ result: string; stylesheet: string | null }> {
-  if (urls.length === 0) return { result: html, stylesheet: null };
-
-  let result = html;
-  let stylesheet: string | null = null;
-
-  for (let i = 0; i < urls.length; i++) {
-    const gistUrl = urls[i];
-    const placeholder = `%%GIST_${i}%%`;
-    try {
-      const res = await fetch(`${gistUrl}.json`);
-      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-      const data = (await res.json()) as { div: string; stylesheet: string };
-      // Strip wrapping <p> tag if marked added one around the placeholder.
-      result = result.replace(`<p>${placeholder}</p>`, data.div);
-      result = result.replace(placeholder, data.div);
-      stylesheet ??= data.stylesheet;
-    } catch (err) {
-      console.error(`Failed to fetch gist ${gistUrl}:`, err);
-      result = result.replace(
-        placeholder,
-        `<p><a href="${gistUrl}">View gist on GitHub</a></p>`,
-      );
-    }
-  }
-
-  return { result, stylesheet };
-}
-
-async function loadPosts(): Promise<Post[]> {
+function loadPosts(): Post[] {
   const postsDir = path.join(CONTENT_DIR, "posts");
   const files = fs
     .readdirSync(postsDir)
@@ -264,16 +218,11 @@ async function loadPosts(): Promise<Post[]> {
     const postPath = `/${year}/${month}/${day}/${slugPart}/`;
 
     const fixedBody = stripJekyll(body, postPath);
-    const { text: noGists, urls: gistUrls } = extractGists(fixedBody);
-    const { text: safeBody, blocks: mathBlocks } = extractMath(noGists);
+    const { text: safeBody, blocks: mathBlocks } = extractMath(fixedBody);
     const rawHtml = marked.parse(safeBody) as string;
-    const { result: mathHtml, found: hasLatex } = renderMathBlocks(
+    const { result: html, found: hasLatex } = renderMathBlocks(
       rawHtml,
       mathBlocks,
-    );
-    const { result: html, stylesheet: gistStylesheet } = await resolveGists(
-      mathHtml,
-      gistUrls,
     );
 
     posts.push({
@@ -285,7 +234,6 @@ async function loadPosts(): Promise<Post[]> {
       description: meta.description ?? "",
       html,
       hasLatex,
-      gistStylesheet,
       path: postPath,
     });
   }
@@ -316,17 +264,16 @@ function loadPages(): Page[] {
   return pages;
 }
 
-const allPosts = await loadPosts();
-
 /** All published posts, newest first. Pinned posts appear first. */
 export const posts: Post[] = (() => {
-  const pinned = allPosts.filter((p) => p.pinned);
-  const regular = allPosts.filter((p) => !p.pinned);
+  const all = loadPosts();
+  const pinned = all.filter((p) => p.pinned);
+  const regular = all.filter((p) => !p.pinned);
   return [...pinned, ...regular];
 })();
 
 /** All published posts in pure chronological order (newest first). */
-export const postsByDate: Post[] = allPosts;
+export const postsByDate: Post[] = loadPosts();
 
 /** All static pages. */
 export const pages: Page[] = loadPages();
