@@ -33,8 +33,8 @@ export type Post = {
   html: string;
   /** True if post contains LaTeX and needs KaTeX CSS. */
   hasLatex: boolean;
-  /** True if post has GitHub Gist embeds that need client-side loading. */
-  hasGists: boolean;
+  /** GitHub Gist embed stylesheet URL, if post has gists. */
+  gistStylesheet: string | null;
   /** URL path like /2023/12/15/floating-point/ */
   path: string;
 };
@@ -189,16 +189,53 @@ function stripJekyll(body: string, currentPostPath: string): string {
   result = result.replace(/\{:\s*[^}]+\}/g, "");
 
   // GitHub Gist <script> embeds use document.write() which breaks after page load.
-  // Replace with placeholder divs loaded client-side via JSONP.
+  // Replaced with fetched HTML at startup via resolveGistEmbeds().
   result = result.replace(
-    /<script\s+src="(https:\/\/gist\.github\.com\/[^"]+\.js)"\s*><\/script>/g,
-    (_, src: string) => `<div class="gist-embed" data-src="${src}"></div>`,
+    /<script\s+src="(https:\/\/gist\.github\.com\/[^"]+)\.js"\s*><\/script>/g,
+    (_, gistUrl: string) => `%%GIST_EMBED:${gistUrl}%%`,
   );
 
   return result;
 }
 
-function loadPosts(): Post[] {
+/** Fetch gist HTML from GitHub's JSON API and inline it, replacing %%GIST_EMBED:url%% placeholders. */
+async function resolveGistEmbeds(html: string): Promise<{
+  result: string;
+  hasGists: boolean;
+  stylesheet: string | null;
+}> {
+  const gistPattern = /%%GIST_EMBED:(https:\/\/gist\.github\.com\/[^%]+)%%/g;
+  const matches = [...html.matchAll(gistPattern)];
+  if (matches.length === 0)
+    return { result: html, hasGists: false, stylesheet: null };
+
+  let result = html;
+  let stylesheet: string | null = null;
+
+  for (const match of matches) {
+    const gistUrl = match[1];
+    try {
+      const res = await fetch(`${gistUrl}.json`);
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      const data = (await res.json()) as {
+        div: string;
+        stylesheet: string;
+      };
+      result = result.replace(match[0], data.div);
+      stylesheet ??= data.stylesheet;
+    } catch (err) {
+      console.error(`Failed to fetch gist ${gistUrl}:`, err);
+      result = result.replace(
+        match[0],
+        `<p><a href="${gistUrl}">View gist on GitHub</a></p>`,
+      );
+    }
+  }
+
+  return { result, hasGists: true, stylesheet };
+}
+
+async function loadPosts(): Promise<Post[]> {
   const postsDir = path.join(CONTENT_DIR, "posts");
   const files = fs
     .readdirSync(postsDir)
@@ -223,10 +260,15 @@ function loadPosts(): Post[] {
     const fixedBody = stripJekyll(body, postPath);
     const { text: safeBody, blocks: mathBlocks } = extractMath(fixedBody);
     const rawHtml = marked.parse(safeBody) as string;
-    const { result: html, found: hasLatex } = renderMathBlocks(
+    const { result: mathHtml, found: hasLatex } = renderMathBlocks(
       rawHtml,
       mathBlocks,
     );
+    const {
+      result: html,
+      hasGists,
+      stylesheet: gistStylesheet,
+    } = await resolveGistEmbeds(mathHtml);
 
     posts.push({
       slug: slugPart,
@@ -237,7 +279,7 @@ function loadPosts(): Post[] {
       description: meta.description ?? "",
       html,
       hasLatex,
-      hasGists: html.includes("gist-embed"),
+      gistStylesheet: hasGists ? gistStylesheet : null,
       path: postPath,
     });
   }
@@ -268,16 +310,17 @@ function loadPages(): Page[] {
   return pages;
 }
 
+const allPosts = await loadPosts();
+
 /** All published posts, newest first. Pinned posts appear first. */
 export const posts: Post[] = (() => {
-  const all = loadPosts();
-  const pinned = all.filter((p) => p.pinned);
-  const regular = all.filter((p) => !p.pinned);
+  const pinned = allPosts.filter((p) => p.pinned);
+  const regular = allPosts.filter((p) => !p.pinned);
   return [...pinned, ...regular];
 })();
 
 /** All published posts in pure chronological order (newest first). */
-export const postsByDate: Post[] = loadPosts();
+export const postsByDate: Post[] = allPosts;
 
 /** All static pages. */
 export const pages: Page[] = loadPages();

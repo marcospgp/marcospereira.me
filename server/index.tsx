@@ -269,11 +269,13 @@ function Shell({
   title,
   description,
   katexCss,
+  gistCss,
   children,
 }: {
   title: string;
   description?: string;
   katexCss?: boolean;
+  gistCss?: string | null;
   children: unknown;
 }) {
   return (
@@ -315,6 +317,7 @@ function Shell({
             crossorigin=""
           />
         )}
+        {gistCss && <link rel="stylesheet" href={gistCss} />}
         <style dangerouslySetInnerHTML={{ __html: globalCss }} />
         <Style />
       </head>
@@ -430,6 +433,7 @@ app.get("/:year/:month/:day/:slug/", (c) => {
       title={`${post.title} | Marcos Pereira`}
       description={post.description}
       katexCss={post.hasLatex}
+      gistCss={post.gistStylesheet}
     >
       <a href="/" class={backLink}>
         ← Home
@@ -442,28 +446,6 @@ app.get("/:year/:month/:day/:slug/", (c) => {
         class={articleBody}
         dangerouslySetInnerHTML={{ __html: post.html }}
       />
-      {post.hasGists && (
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-document.querySelectorAll(".gist-embed").forEach(function(el) {
-  var src = el.dataset.src;
-  var id = "gist_cb_" + Math.random().toString(36).slice(2);
-  window[id] = function(data) {
-    el.innerHTML = data.div;
-    var link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = data.stylesheet;
-    document.head.appendChild(link);
-    delete window[id];
-  };
-  var s = document.createElement("script");
-  s.src = src + "?callback=" + id;
-  document.body.appendChild(s);
-});`,
-          }}
-        />
-      )}
       <Footer />
     </Shell>,
   );
