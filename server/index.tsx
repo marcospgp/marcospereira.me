@@ -379,7 +379,7 @@ app.get("/", (c) => {
           <a href="https://clawr.ing">clawr.ing</a>
         </div>
         <div class={projectDesc}>
-          A service that lets your OpenClaw agent call you on the phone.
+          Lets your OpenClaw agent call you on the phone.
         </div>
       </div>
       <div class={projectBlock}>
