@@ -332,6 +332,7 @@ function Footer() {
       <footer class={footerStyle}>
         <a href="https://x.com/voxelbased">X</a>
         <a href="https://github.com/marcospgp">GitHub</a>
+        <a href="https://www.linkedin.com/in/marcosrafaelpereira/">LinkedIn</a>
       </footer>
     </>
   );
@@ -353,17 +354,21 @@ app.get("/", (c) => {
   return c.html(
     <Shell
       title="Marcos Pereira"
-      description="Developer from Portugal. Building software with AI."
+      description="Developer from Portugal. Co-founder at HESOYAM, a software studio."
     >
       <div class={nameStyle}>Marcos Pereira</div>
       <div class={bioStyle}>
         Developer from Portugal.
         <br />
-        Building <a href="https://hesoyam.zip">hesoyam</a>, a software studio.
+        Co-founder at <a href="https://hesoyam.zip">HESOYAM</a>, a software
+        studio.
       </div>
       <div class={topLinks}>
+        <a href="/about-me">About</a>
+        <a href="/resume">Resume</a>
         <a href="https://x.com/voxelbased">X</a>
         <a href="https://github.com/marcospgp">GitHub</a>
+        <a href="https://www.linkedin.com/in/marcosrafaelpereira/">LinkedIn</a>
       </div>
 
       <div class={rule} />
@@ -373,13 +378,18 @@ app.get("/", (c) => {
         <div class={projectName}>
           <a href="https://clawr.ing">clawr.ing</a>
         </div>
-        <div class={projectDesc}>The phone calling skill for OpenClaw</div>
+        <div class={projectDesc}>
+          A service that lets your OpenClaw agent call you on the phone.
+        </div>
       </div>
       <div class={projectBlock}>
         <div class={projectName}>
-          <a href="https://inkandquill.app">inkandquill.app</a>
+          <a href="https://inkandquill.app">Ink &amp; Quill</a>
         </div>
-        <div class={projectDesc}>Voice adventures with AI</div>
+        <div class={projectDesc}>
+          A voice roleplay app on the App Store, where a narrator tells a
+          story out loud and you decide what happens by speaking.
+        </div>
       </div>
 
       <div class={rule} />
@@ -447,7 +457,7 @@ app.get("/:year/:month/:day/:slug/", (c) => {
   );
 });
 
-// Static pages (notes, concepts, resume, about — accessible via direct URL)
+// Static pages (notes, concepts, resume, about). The homepage links about and resume, the rest are reached by direct URL.
 for (const page of pages) {
   app.get(page.path, (c) =>
     c.html(

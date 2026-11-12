@@ -14,64 +14,113 @@ comments_section: false
 
 Developer based in [Porto, Portugal](https://goo.gl/maps/AAJhJkfqMChWV19s6).
 
-Main areas of focus: web, machine learning, and 3D games & simulations.
-
-- 10+ years of experience building products on the web;
-- Expert on state of the art machine learning & research lab member at the [Machine Learning Collective](https://x.com/ml_collective) under [Rosanne Liu](https://x.com/savvyRL) (Google DeepMind);
-- Extensive experience with the Unity engine, including as an asset store publisher.
-
 ## Experience
 
-- Freelancing since high school (2013)
-- Software Engineering degree (2015-2018)
-- Joined [Toptal](https://www.toptal.com/resume/marcos-pereira) in 2017
-- Joined [MLC](http://mlcollective.org/) research lab [in 2020](https://marcospereira.me/2020/11/01/ml-collective-arc/)
+### Co-founder, [HESOYAM](https://hesoyam.zip)
 
-Some companies I have worked with:
+2025 to present
 
-- [Apprentice](https://www.apprentice.io/)
-- [Angle Health](https://www.anglehealth.com/)
-- [Transloadit](https://transloadit.com/)
-- [Kitty's Co.](https://www.kittys.co/)
-- [Youblicity](https://youblicity.com/)
-- [Kogneta](https://kogneta.com/)
+- Launched [Ink & Quill](https://inkandquill.app), an app where a narrator tells a story out loud and you decide what happens by speaking.
+- Launched [clawr.ing](https://clawr.ing), a phone-calling service for AI agents.
+- Built an internal knowledge app for a client's team.
 
-My full work history is available on [LinkedIn](https://www.linkedin.com/in/marcosrafaelpereira/).
+### webAI, through A.Team
 
-Some languages I tend to work with frequently are JavaScript/TypeScript, Python, C#, and Bash. I have also worked with most popular machine learning libraries, including TensorFlow, PyTorch, and JAX.
+2023 to 2025
 
-I am comfortable working with most tech stacks, and happy to pick up any I haven't worked with before. I believe the tools are a means to an end, and at the end of the day it's all about creating value for the end user.
+- Wrote the Python SDK for running AI models on local hardware.
+- Built the runtime that splits a workload across a cluster of machines and runs the parts in parallel.
+- Created the command line tool that drives the platform from a terminal.
 
-## Side projects
+### [Transloadit](https://transloadit.com/)
 
-Working on my own projects is a large part of what I spend my time on. Below are some of the things I've done.
+2023
 
-### Machine learning
+- Refactored the Bash-based infrastructure pipeline and audited its build scripts for security issues.
+- Overhauled the GitHub Actions CI, adding new automation and refactoring existing workflows.
+- Implemented a new file-processing robot for the platform.
 
-- [Derived backpropagation from scratch](https://marcospereira.me/2022/08/18/backpropagation-from-scratch/) to develop an intuitive understanding of the algorithm powering modern ML models
-- [Applied neural cellular automata models to the abstraction and reasoning corpus](https://marcospereira.me/2020/11/01/ml-collective-arc/) as part of my research at MLC
-- Experimented with neural network weight compression using low-rank matrix approximation
-- Applied LLMs to NPCs in virtual worlds, triggering actions based on model output
+### Headrush Learning, through Toptal
 
-### Game development
+2023
 
-- Published a [mesh optimization tool](https://marcospereira.me/2022/01/10/i-just-published-polygon-reducer-on-the-unity-asset-store/) in the Unity asset store (my first profitable side project)
-- Researched [frame rate independence](https://marcospereira.me/2023/11/15/frame-rate-independent-lerp/)
-- Implemented [Fowler–Noll–Vo 1a hash in C#](https://marcospereira.me/2022/05/10/a-simple-hash-for-perlin-noise/) as part of my procedural generation efforts
-- Working on an infinite terrain generator based on a graph editor (inspired by shader graph). Currently looking into using the browser as a UI due to insufficient support for graph-based UIs in the Unity editor.
+- Added a GraphQL API to a legacy system.
+- Automated report generation from GraphQL query templates.
+- Audited the security of production servers and fixed the issues found.
 
-### Web
+### [Angle Health](https://www.anglehealth.com/), through Toptal
 
-- Built [flappy goat](https://github.com/marcospgp/flappygoat), a web-based clone of the hit mobile game, in pure JavaScript
-- Published [Twitter Infinite Scroll Disabler](https://github.com/marcospgp/twitter-infinite-scroll-disabler), a browser extension that replaced Twitter's infinite scroll with a "show more" button
-- Built a modular web questionnaire scaffolding and published [should you have some coffee](https://github.com/marcospgp/should-you-have-some-coffee)
-- Built [Watch Together](https://github.com/marcospgp/watch-together), a browser extension for synchronizing video players across multiple users on a popular web streaming service
-- [Set up a VPS](https://marcospereira.me/2023/03/13/vps/) in a repeatable way, with zero manual steps
-- Wrote a [checklist for using SQLite](https://marcospereira.me/2023/02/14/checklist-for-sqlite/) on personal web projects in the safest & cleanest possible way
+2021 to 2022
+
+- Built data pipelines that ingest and analyze insurance provider data.
+- Designed a data model that unifies the schemas of different insurance networks.
+
+### [Apprentice](https://www.apprentice.io/), through A.Team
+
+2021
+
+- Migrated the backend from Sails to Express.
+- Containerized the development environment with Docker.
+
+### [Youblicity](https://youblicity.com/), through Toptal
+
+2019 to 2020
+
+- Built the Node.js API for user accounts, sponsor sign-up, and payment tracking.
+- Built pipelines that collect and analyze several terabytes of Twitch data.
+- Created computer vision tools that verify sponsor content on Twitch streams.
+
+### Athlane, through Toptal
+
+2019 to 2020
+
+- Built the backend API for streamer and sponsorship data.
+- Led the backend team and designed the server architecture.
+
+### Swish Labs
+
+2018 to 2019
+
+- Shipped a browser extension with thousands of active users.
+- Led the rebuild of an online clothing store.
+- Built a share trading platform from scratch.
+- Developed REST and GraphQL APIs with Node.js.
+
+### Kogneta
+
+2018
+
+- Built internal tools for customer acquisition.
+- Set up serverless data processing and storage on Google Cloud.
+
+### [Kitty's Co.](https://www.kittys.co/)
+
+2017 to 2018
+
+- Built internal tools for the agency's creative team.
+- Wrote Node.js scripts for the Facebook Marketing API, running on AWS Lambda and Step Functions.
+
+### Okorana
+
+2016 to 2017
+
+- Built a drag and drop interface in AngularJS for placing and resizing widgets.
+- Developed REST APIs for single-page apps on SQL and NoSQL databases.
+- Led the development team and hired new members.
+- Created a browser extension for a customizable new tab page.
+
+## Education
+
+Bachelor's in Software Engineering, Universidade do Minho, 2015 to 2018.
+
+## Projects
+
+- Published [Polygon Reducer](https://marcospereira.me/2022/01/10/i-just-published-polygon-reducer-on-the-unity-asset-store/), a mesh optimization tool, on the Unity Asset Store.
+- [Applied neural cellular automata to the Abstraction and Reasoning Corpus](https://marcospereira.me/2020/11/01/ml-collective-arc/) at the [Machine Learning Collective](https://mlcollective.org/), 2020 to 2021.
+- [Derived backpropagation from scratch](https://marcospereira.me/2022/08/18/backpropagation-from-scratch/) and built a convolutional network with it.
 
 ## Links
 
-- [Personal website](https://marcospereira.me/) (you are here)
 - [X](https://x.com/voxelbased)
 - [GitHub](https://github.com/marcospgp)
 - [Toptal](https://www.toptal.com/resume/marcos-pereira)
