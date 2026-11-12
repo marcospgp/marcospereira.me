@@ -330,7 +330,7 @@ function Footer() {
     <>
       <div class={rule} />
       <footer class={footerStyle}>
-        <a href="https://x.com/marcospereeira">X</a>
+        <a href="https://x.com/voxelbased">X</a>
         <a href="https://github.com/marcospgp">GitHub</a>
       </footer>
     </>
@@ -362,7 +362,7 @@ app.get("/", (c) => {
         Building <a href="https://hesoyam.zip">hesoyam</a>, a software studio.
       </div>
       <div class={topLinks}>
-        <a href="https://x.com/marcospereeira">X</a>
+        <a href="https://x.com/voxelbased">X</a>
         <a href="https://github.com/marcospgp">GitHub</a>
       </div>
 
