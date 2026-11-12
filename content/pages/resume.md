@@ -60,7 +60,7 @@ Developer based in [Porto, Portugal](https://goo.gl/maps/AAJhJkfqMChWV19s6).
 2021
 
 - Migrated the backend from Sails to Express.
-- Containerized the development environment with Docker.
+- Containerized the development environment.
 
 ### [Youblicity](https://youblicity.com/), through Toptal
 
