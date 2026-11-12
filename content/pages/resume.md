@@ -117,7 +117,7 @@ Bachelor's in Software Engineering, Universidade do Minho, 2015 to 2018.
 
 - Published [Polygon Reducer](https://marcospereira.me/2022/01/10/i-just-published-polygon-reducer-on-the-unity-asset-store/), a mesh optimization tool, on the Unity Asset Store.
 - [Applied neural cellular automata to the Abstraction and Reasoning Corpus](https://marcospereira.me/2020/11/01/ml-collective-arc/) at the [Machine Learning Collective](https://mlcollective.org/), 2020 to 2021.
-- [Derived backpropagation from scratch](https://marcospereira.me/2022/08/18/backpropagation-from-scratch/) and built a convolutional network with it.
+- [Derived backpropagation and implemented a neural network from scratch](https://marcospereira.me/2022/08/18/backpropagation-from-scratch/).
 
 ## Links
 
