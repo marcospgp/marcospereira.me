@@ -81,10 +81,10 @@ Developer based in [Porto, Portugal](https://goo.gl/maps/AAJhJkfqMChWV19s6).
 
 2018 to 2019
 
-- Shipped a browser extension with thousands of active users.
-- Led the rebuild of an online clothing store.
-- Built a share trading platform from scratch.
-- Developed REST and GraphQL APIs with Node.js.
+- Added configurable products, test coverage and documentation to the Node.js API behind a clothing label's iOS app.
+- Built the GraphQL back end of a share trading app.
+- Developed a browser extension that checks Twitter for propaganda accounts.
+- Wrote the hiring guide for web developers and interviewed candidates.
 
 ### Kogneta
 
