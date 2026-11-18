@@ -379,7 +379,7 @@ app.get("/", (c) => {
           <a href="https://clawr.ing">clawr.ing</a>
         </div>
         <div class={projectDesc}>
-          Lets your OpenClaw agent call you on the phone.
+          Lets OpenClaw call its user on the phone.
         </div>
       </div>
       <div class={projectBlock}>
@@ -388,7 +388,7 @@ app.get("/", (c) => {
         </div>
         <div class={projectDesc}>
           A voice roleplay app on the App Store, where a narrator tells a
-          story out loud and you decide what happens by speaking.
+          story out loud and the player decides what happens by speaking.
         </div>
       </div>
 

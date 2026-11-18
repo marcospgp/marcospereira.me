@@ -20,7 +20,7 @@ Developer based in [Porto, Portugal](https://goo.gl/maps/AAJhJkfqMChWV19s6).
 
 2025 to present
 
-- Launched [Ink & Quill](https://inkandquill.app), an app where a narrator tells a story out loud and you decide what happens by speaking.
+- Launched [Ink & Quill](https://inkandquill.app), an app where a narrator tells a story out loud and the player decides what happens by speaking.
 - Launched [clawr.ing](https://clawr.ing), a phone-calling service for AI agents.
 - Built an internal knowledge app for a client's team.
 
